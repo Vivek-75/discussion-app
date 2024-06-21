@@ -1,11 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit'
-
+import userReducer from './slice/userSlice'
 import { useDispatch, useSelector } from 'react-redux'
 import type { TypedUseSelectorHook } from 'react-redux'
 import { api } from '../services/api'
 
 export const store = configureStore({
   reducer: {
+    user: userReducer,
     [api.reducerPath]: api.reducer,
   },
   middleware: (getDefaultMiddleware) =>

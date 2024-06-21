@@ -1,115 +1,74 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
 import './App.css'
-import axios from 'axios'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { CssBaseline } from '@mui/material'
+import Navbar from './components/Navbar'
+import Home from './pages/home/Home'
+import Login from './pages/Login'
+import { useVerifyAuthMutation } from './services/api'
+import { useAppDispatch, useAppSelector } from './store/store'
+import { setUser } from './store/slice/userSlice'
+import DiscussionPage from './pages/DiscussionPage'
+import NewDiscussion from './pages/NewDiscussion'
+import MyDiscussions from './pages/MyDiscussions'
+import UserList from './pages/UserList'
 
-axios.defaults.baseURL = 'http://localhost:3000'
-axios.defaults.withCredentials = true
 
 function App() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const user = localStorage.getItem('user')
+  const isAuth = Boolean(user)
+  const isAdmin = user != null && JSON.parse(user).role === 'ADMIN'
+  const userId = useAppSelector(state => state.user._id)
+  const dispatch = useAppDispatch()
+  const [ verifyAuth ] = useVerifyAuthMutation()
 
-  const reset = () => {
-    setEmail('')
-    setPassword('')
-  }
-
-  const login = async () => {
-    const data = await axios.post('/auth/login', {email: email, password:password})
-    console.log(data);
-    reset()
-  }
-  const create = async () => {
-    const data = await axios.post('/user/create', {title: email, content:password})
-    console.log(data);
-    reset()
-  }
-
-  const reply = async () => {
-    const data = await axios.post('/user/reply', {discussionId: email, content:password})
-    console.log(data);
-    reset()
-  }
-
-  const like = async () => {
-    const data = await axios.post('/user/like', {discussionId: email})
-    console.log(data);
-    reset()
-  }
-
-  const myDiscussion = async () => {
-    const data = await axios.post('/user/discussion')
-    console.log(data);
-    reset()
+  console.log('userid', isAdmin);
+  
+  const getUser = async () => {
+    try{
+      const {data, error} = await verifyAuth()
+      if(error)
+        throw new Error()
+      console.log(data, error);
+      
+      if(!data.auth || data._id === undefined){
+        localStorage.removeItem('user')
+        console.log('logged out');     
+      }
+      else
+        dispatch(setUser({_id: data._id}))
+    }
+    catch{
+      console.log('User is not logged in');
+    }
   }
   
-  const close = async () => {
-    const data = await axios.post('/admin/close', {discussionId: email})
-    console.log(data);
-    reset()
-  }
-
-  const block = async () => {
-    const data = await axios.post('/admin/block', {userId: email})
-    console.log(data);
-    reset()
-  }
-
-  const getUsers = async () => {
-    const data = await axios.post('/admin/allUsers')
-    console.log(data);
-    reset()
-  }
-
+  useEffect(() => {
+    if(isAuth && userId == '')
+      getUser()
+  }, [])
+  
+  if(isAuth && userId == '')
+    return <h1>Loading...</h1>
+  
   return (
-    <>
-    <div>
+    <BrowserRouter>
+      <CssBaseline />
+      {isAuth &&<> <Navbar /> </>}
+      <Routes>
+        <Route path='/login' element={isAuth ? <Navigate to='/' /> : <Login />} />
+        <Route path='/' element={isAuth ? <Home /> : <Navigate to='/login' /> } />
+        <Route path='/discussion/new' element={isAuth ? <NewDiscussion /> : <Navigate to='/login' /> } />
+        <Route path='/my-discussion' element={isAuth ? <MyDiscussions /> : <Navigate to='/login' /> } />
+        <Route path='/discussion/:id' element={isAuth ? <DiscussionPage /> : <Navigate to='/login' /> } />
+        
+        {/* admin */}
+        <Route path='/users' element={isAdmin ? <UserList /> : <Navigate to='/login' /> } />
+        {/* <Route path='/users' element={isAuth && isAdmin ? <Users /> : <Navigate to='/login' />} /> */}
 
-      <input type="text" value={email} onChange={e => setEmail(e.target.value)}/>
-      <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
-      <button onClick={login}>login</button>
-    </div>
-
-      <div>
-        <input type="text" value={email} onChange={e => setEmail(e.target.value)}/>
-        <input type="text" value={password} onChange={e => setPassword(e.target.value)} />
-        <button onClick={create}>create</button>
-      </div>
-
-      <div>
-        <input type="text" value={email} onChange={e => setEmail(e.target.value)}/>
-        <input type="text" value={password} onChange={e => setPassword(e.target.value)} />
-        <button onClick={reply}>reply</button>
-      </div>
-
-      <div>
-        <input type="text" value={email} onChange={e => setEmail(e.target.value)}/>
-        <button onClick={like}>like</button>
-      </div>
-
-      <div>
-      <input type="text" value={email} onChange={e => setEmail(e.target.value)}/>
-        <button onClick={myDiscussion}>get discussion</button>
-      </div>
-
-      <div>
-      <input type="text" value={email} onChange={e => setEmail(e.target.value)}/>
-        <button onClick={close}>close</button>
-      </div>
-
-      <div>
-      <input type="text" value={email} onChange={e => setEmail(e.target.value)}/>
-        <button onClick={block}>block</button>
-      </div>
-
-      <div>
-      {/* <input type="text" value={email} onChange={e => setEmail(e.target.value)}/> */}
-        <button onClick={getUsers}>get users</button>
-      </div>
-
-    </>
+        <Route path='*' element={<Navigate to='/' />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

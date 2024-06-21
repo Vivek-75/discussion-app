@@ -23,8 +23,11 @@ export const roleAuth = (role: string) => {
       const user = await User.findById(verified.userId);
       if(!user)
         throw new Error("user not found");
-      if(user.role != role) 
+      // role===user.role || role.includes(user.role)
+      if(!role.includes(user.role)){
+        console.log(role, user.role);
         throw new Error('Role based error');
+      } 
       if(user.blocked){
         throw new Error('Blocked User');
       }

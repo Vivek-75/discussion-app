@@ -37,7 +37,7 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use('/auth', authRoutes)
 app.use('/admin', roleAuth('ADMIN'), adminRoutes)
-app.use('/user', roleAuth('USER'), userRoutes)
+app.use('/user', roleAuth('USER-ADMIN'), userRoutes)
 
 
 app.listen(3000, () =>{

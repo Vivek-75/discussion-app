@@ -10,8 +10,7 @@ import { Discussion } from '../models/discussion';
 
 export const close = async (req: Request, res: Response) => {
   try{
-    const {discussionId} = req.body
-    // const {discussionId} = req.params
+    const {discussionId} = req.params
 
     const discussion = await Discussion.findById(discussionId)
     if(!discussion) 
@@ -31,7 +30,7 @@ export const close = async (req: Request, res: Response) => {
 
 export const blockUser = async (req: Request, res: Response) => {
   try{
-    const {userId} = req.body
+    const {userId} = req.params
     // const {discussionId} = req.body
 
     // const discussion = await Discussion.findById(discussionId)
@@ -57,7 +56,7 @@ export const blockUser = async (req: Request, res: Response) => {
 
 export const allUsers = async (req: Request, res: Response) => {
   try{
-    const users = await User.find({role: 'USER'})
+    const users = await User.find({role: 'USER'}).select('_id name email role blocked')
     if(!users) 
       return res.status(404).json({message: 'user not found'})
 

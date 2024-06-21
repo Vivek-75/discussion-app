@@ -4,8 +4,8 @@ import { allUsers, blockUser, close } from '../controllers/admin';
 
 const router = express.Router();
 
-router.post('/close', close)
-router.post('/block', blockUser)
+router.post('/close/:discussionId', close)
+router.post('/block/:userId', blockUser)
 router.post('/allUsers', allUsers)
 
 
